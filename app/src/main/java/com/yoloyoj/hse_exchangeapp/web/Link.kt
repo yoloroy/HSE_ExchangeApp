@@ -11,4 +11,7 @@ interface Link {
         @Query("base") base: String,
         @Query("symbols") symbol: String
         ): Call<Map<Any, Any>?>?
+
+    @GET("latest")
+    fun getAvailableNames(): Call<Map<Any, Any>?>?
 }
