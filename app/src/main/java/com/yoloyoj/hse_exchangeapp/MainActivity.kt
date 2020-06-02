@@ -3,18 +3,26 @@ package com.yoloyoj.hse_exchangeapp
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
+import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
+import com.yoloyoj.hse_exchangeapp.web.getApiClient
 import kotlinx.android.synthetic.main.activity_main.*
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
 import java.util.*
 
 
 class MainActivity : AppCompatActivity() {
     // current currencies
-    lateinit var topCurrency: String
-    lateinit var botCurrency: String
+    private lateinit var topCurrency: String
+    private lateinit var botCurrency: String
 
     // to avoid recursion
     var isCalculating = true
+
+    // divide on this to convert top to bot and multiply for do the opposite
+    var convertValue: Double = 1.0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -23,6 +31,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onStart() {
         loadDefaults()
+        loadConvertValue()
         loadListeners()
 
         super.onStart()
@@ -31,6 +40,8 @@ class MainActivity : AppCompatActivity() {
     private fun loadDefaults() {
         topCurrency = "RUB"
         botCurrency = "USD"
+
+        convertValue = 74.0
 
         top_value.hint = Currency.getInstance(topCurrency).getName()
         bot_value.hint = Currency.getInstance(botCurrency).getName()
@@ -49,7 +60,7 @@ class MainActivity : AppCompatActivity() {
                     isCalculating = false
                     bot_value.editText?.text =
                         if (s.isNotBlank())
-                            (s.toDouble() / 74).toEditable()
+                            (s.toDouble() / convertValue).toEditable()
                         else
                             "0".toEditable()
                 } else
@@ -67,13 +78,27 @@ class MainActivity : AppCompatActivity() {
                     isCalculating = false
                     top_value.editText?.text =
                         if (s.isNotBlank())
-                            (s.toDouble() * 74).toEditable()
+                            (s.toDouble() * convertValue).toEditable()
                         else
                             "0".toEditable()
                 } else
                     isCalculating = true
             }
         })
+    }
+
+    private fun loadConvertValue() {
+        Log.i("load", "ConvertValue")
+        getApiClient()
+            .getExchangeValues(botCurrency, topCurrency)?.enqueue(object : Callback<Map<Any, Any>?> {
+                override fun onFailure(call: Call<Map<Any, Any>?>, t: Throwable) {
+                    Log.i("CV", "onFailure")
+                }
+
+                override fun onResponse(call: Call<Map<Any, Any>?>, response: Response<Map<Any, Any>?>) {
+                    convertValue = (response.body()?.get("rates") as Map<*, *>)["RUB"] as Double
+                }
+            })
     }
 }
 
