@@ -1,0 +1,2 @@
+rootProject.name='HSE_ExchangeApp'
+include ':app'

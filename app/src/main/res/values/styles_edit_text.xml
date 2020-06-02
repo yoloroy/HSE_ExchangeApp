@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style
+        name="MainTextInputLayout"
+        parent="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">0dp</item>
+
+        <item name="android:layout_weight">1</item>
+        <item name="android:layout_margin">8dp</item>
+
+        <item name="boxBackgroundColor">@android:color/transparent</item>
+        <item name="boxBackgroundMode">outline</item>
+        <item name="endIconMode">clear_text</item>
+    </style>
+</resources>
