@@ -134,7 +134,7 @@ class MainActivity : AppCompatActivity() {
                             object : ArrayAdapter<String>(this@MainActivity, android.R.layout.simple_list_item_1, names) {
                                 override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
                                     return super.getView(position, convertView, parent)
-                                        .convertView(position).apply { setTextColor(resources.getColor(R.color.onPrimary)) }
+                                        .convertView(position).apply { setTextColor(resources.getColor(R.color.onPrimary, null)) }
                                 }
 
                                 override fun getDropDownView(position: Int, convertView: View?, parent: ViewGroup): View {
