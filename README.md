@@ -13,8 +13,8 @@
   1. Далее нужно поставить AVD с версией SDK выше или равной 19 и запустить само приложение `Shift + F10`
 
 ## Скриншоты работы приложения
-<img align="left" width="40%" src="https://sun1-88.userapi.com/KrYnwi4SSPBo48lRyc4Voz_0VpaXYI8-rKhLfQ/AOXW9yaK06k.jpg"/>
-<img align="right" width="40%" src="https://sun1-93.userapi.com/yalJjkeO8F1urpnpEz7IDk7pRaz-VGWbKiOQWA/M78Mf1dhgUU.jpg"/>
+![](https://sun1-88.userapi.com/KrYnwi4SSPBo48lRyc4Voz_0VpaXYI8-rKhLfQ/AOXW9yaK06k.jpg)
+![](https://sun1-93.userapi.com/yalJjkeO8F1urpnpEz7IDk7pRaz-VGWbKiOQWA/M78Mf1dhgUU.jpg)
 
 <br><br><br>
 ## Мои контакты
