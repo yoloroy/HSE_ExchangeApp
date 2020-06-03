@@ -1,3 +1,10 @@
 <resources>
-    <string name="app_name">HSE_ExchangeApp</string>
+    <string name="app_name">HSE Currency converter</string>
+
+    <string name="connect_fail_show_saved_data">Problem when connecting. Showing the last saved data</string>
+    <string name="connect_fail_saved_data_fail">An error occurred while trying to upload data for currency conversion</string>
+    <string name="from">From:</string>
+    <string name="to">To:</string>
+    <string name="date">Date</string>
+    <string name="refresh">Refresh</string>
 </resources>

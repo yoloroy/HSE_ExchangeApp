@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">ВШЭ Конвертер валют</string>
+    <string name="connect_fail_show_saved_data">Проблема с подключением. Показываем последнюю сохранённую информацию</string>
+    <string name="connect_fail_saved_data_fail">Произошла ошибка при попытки загрузить информацию для конвертации</string>
+    <string name="from">Из:</string>
+    <string name="to">В:</string>
+    <string name="date">Дата</string>
+    <string name="refresh">Обновить</string>
+</resources>

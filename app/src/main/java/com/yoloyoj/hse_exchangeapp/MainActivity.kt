@@ -9,6 +9,8 @@ import android.text.Editable
 import android.text.TextWatcher
 import android.view.View
 import android.view.ViewGroup
+import android.view.animation.Animation
+import android.view.animation.RotateAnimation
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.TextView
@@ -23,6 +25,8 @@ import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 import java.util.*
+import kotlin.concurrent.thread
+import kotlin.concurrent.timerTask
 
 
 const val SAVED_VALUES = "saved_values"
@@ -31,7 +35,7 @@ const val SAVED_VALUES = "saved_values"
 class MainActivity : AppCompatActivity() {
     private lateinit var backdropController: BackdropController
 
-    private lateinit var savedValues: MutableMap<String, Double>
+    private var savedValues: MutableMap<String, Double> = mutableMapOf()
 
     // current currencies
     private lateinit var topCurrency: String
@@ -48,6 +52,11 @@ class MainActivity : AppCompatActivity() {
     // Available currencies
     var names = emptyList<String>()
 
+    override fun onBackPressed() {
+        if (!backdropController.conceal())
+            super.onBackPressed()
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -59,13 +68,51 @@ class MainActivity : AppCompatActivity() {
         loadValues()
 
         loadListeners()
-        loadChoosers()
-        // loadDefaults calls after get response in loadChoosers
+        loadNames()
+        loadDefaults()
         // loadConvertValue calls in loadDefaults
 
         loadDatePicker()
 
         super.onStart()
+    }
+
+    fun onRefresh(view: View) {
+        RotateAnimation(0.0f, 180.0f,
+            Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF,
+            0.5f).apply {
+            this.duration = 600
+            this.fillAfter = true
+
+            view.startAnimation(this)
+
+            thread {
+                Thread.sleep(950)
+                RotateAnimation(180.0f, 0.0f,
+                    Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF,
+                    0.5f).apply {
+                    this.duration = 600
+
+                    view.startAnimation(this)
+                }
+            }
+        }
+
+        updateConvertValue()
+    }
+
+    private fun loadBackdrop() {
+        backdropController = BackdropController.build(backLayout, this) {
+            supportToolbar = this@MainActivity.toolbar
+
+            navigationIconSettings(currency_choose)
+
+            concealedTitleId = R.string.app_name
+            concealedNavigationIconId = R.drawable.ic_menu_black
+            revealedNavigationIconId = R.drawable.ic_close_black
+        }
+
+        toolbar.setTitle(R.string.app_name)
     }
 
     @SuppressLint("SetTextI18n")
@@ -90,24 +137,6 @@ class MainActivity : AppCompatActivity() {
         date_picker.editText!!.setOnFocusChangeListener { view, b ->
             if (b) view.callOnClick()
         }
-    }
-
-    override fun onBackPressed() {
-        if (!backdropController.conceal())
-            super.onBackPressed()
-    }
-
-    private fun loadBackdrop() {
-        backdropController = BackdropController.build(backLayout, this) {
-            supportToolbar = this@MainActivity.toolbar
-            navigationIconSettings(currency_choose)
-
-            concealedTitleId = R.string.app_name
-            concealedNavigationIconId = R.drawable.ic_menu_black
-            revealedNavigationIconId = R.drawable.ic_close_black
-        }
-
-        toolbar.setTitle(R.string.app_name)
     }
 
     private fun loadDefaults() {
@@ -156,11 +185,14 @@ class MainActivity : AppCompatActivity() {
         })
     }
 
-    private fun loadChoosers() {
+    private fun loadNames() {
         getApiClient()
             .getAvailableNames()?.enqueue(object : Callback<Map<Any, Any>?> {
                 override fun onFailure(call: Call<Map<Any, Any>?>, t: Throwable) {
                     //  for this case we have saved information
+                    loadChoosers()
+
+                    loadDefaults()
                 }
 
                 override fun onResponse(call: Call<Map<Any, Any>?>, response: Response<Map<Any, Any>?>) {
@@ -169,53 +201,58 @@ class MainActivity : AppCompatActivity() {
                         .also { saveValues(it) }
                         .keys.plus("EUR").toList().sorted().also { names ->
                             this@MainActivity.names = names
-                            with(
-                                object : ArrayAdapter<String>(this@MainActivity, android.R.layout.simple_list_item_1, names) {
-                                    override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
-                                        return super.getView(position, convertView, parent)
-                                            .convertView(position).apply {
-                                                @Suppress("DEPRECATION")
-                                                setTextColor(resources.getColor(R.color.onPrimary))
-                                            }
-                                    }
 
-                                    override fun getDropDownView(position: Int, convertView: View?, parent: ViewGroup): View {
-                                        return super.getDropDownView(position, convertView, parent)
-                                            .convertView(position)
-                                    }
-
-                                    private fun View.convertView(position: Int) = (this as TextView).apply {
-                                        text = Currency.getInstance(getItem(position)).getName()
-                                    }
-                                }
-                            ) {
-                                top_currency_choose.adapter = this
-                                bot_currency_choose.adapter = this
-                            }
-
-                            top_currency_choose.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-                                override fun onNothingSelected(parent: AdapterView<*>?) {}
-
-                                override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
-                                    topCurrency = parent!!.adapter.getItem(position).toString()
-                                    top_value.hint = Currency.getInstance(topCurrency).getName()
-                                    updateConvertValue()
-                                }
-                            }
-                            bot_currency_choose.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-                                override fun onNothingSelected(parent: AdapterView<*>?) {}
-
-                                override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
-                                    botCurrency = parent!!.adapter.getItem(position).toString()
-                                    bot_value.hint = Currency.getInstance(botCurrency).getName()
-                                    updateConvertValue()
-                                }
-                            }
+                            loadChoosers()
 
                             loadDefaults()
                     }
                 }
             })
+    }
+
+    private fun loadChoosers() {
+        with(
+            object : ArrayAdapter<String>(this@MainActivity, android.R.layout.simple_list_item_1, names) {
+                override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
+                    return super.getView(position, convertView, parent)
+                        .convertView(position).apply {
+                            @Suppress("DEPRECATION")
+                            setTextColor(resources.getColor(R.color.onPrimary))
+                        }
+                }
+
+                override fun getDropDownView(position: Int, convertView: View?, parent: ViewGroup): View {
+                    return super.getDropDownView(position, convertView, parent)
+                        .convertView(position)
+                }
+
+                private fun View.convertView(position: Int) = (this as TextView).apply {
+                    text = Currency.getInstance(getItem(position)).getName()
+                }
+            }
+        ) {
+            top_currency_choose.adapter = this
+            bot_currency_choose.adapter = this
+        }
+
+        top_currency_choose.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onNothingSelected(parent: AdapterView<*>?) {}
+
+            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+                topCurrency = parent!!.adapter.getItem(position).toString()
+                top_value.hint = Currency.getInstance(topCurrency).getName()
+                updateConvertValue()
+            }
+        }
+        bot_currency_choose.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onNothingSelected(parent: AdapterView<*>?) {}
+
+            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+                botCurrency = parent!!.adapter.getItem(position).toString()
+                bot_value.hint = Currency.getInstance(botCurrency).getName()
+                updateConvertValue()
+            }
+        }
     }
 
     @SuppressLint("SetTextI18n")  // this is only a number
@@ -235,7 +272,7 @@ class MainActivity : AppCompatActivity() {
                         if (containsKey(topCurrency) and containsKey(botCurrency)) {
                             Snackbar.make(
                                 convert_value,
-                                "Problem when connecting. Showing the last saved data",
+                                resources.getText(R.string.connect_fail_show_saved_data),
                                 Snackbar.LENGTH_LONG
                             ).show()
 
@@ -243,13 +280,14 @@ class MainActivity : AppCompatActivity() {
                         } else {
                             Snackbar.make(
                                 convert_value,
-                                "An error occurred while trying to upload data for currency conversion",
+                                resources.getText(R.string.connect_fail_saved_data_fail),
                                 Snackbar.LENGTH_LONG
                             ).show()
 
                             1.0
                         }
                     }
+                    recalcConvertValue()
                 }
 
                 override fun onResponse(call: Call<Map<Any, Any>?>, response: Response<Map<Any, Any>?>) {
@@ -263,7 +301,7 @@ class MainActivity : AppCompatActivity() {
             })
     }
 
-    private fun recalcConvertValue() {
+    private fun recalcConvertValue() = runOnUiThread {
         top_value.editText!!.text = top_value.editText!!.text
 
         // why I don't defined normal func? - I dunno

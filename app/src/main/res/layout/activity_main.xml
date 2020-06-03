@@ -50,7 +50,7 @@
                         android:layout_height="48dp"
                         android:gravity="center_vertical"
                         android:minWidth="48dp"
-                        android:text="From: "
+                        android:text="@string/from"
                         android:textAlignment="textEnd"
                         android:textColor="@color/onPrimary"
                         android:textSize="18sp"
@@ -62,7 +62,7 @@
                         android:layout_height="48dp"
                         android:gravity="center_vertical"
                         android:minWidth="48dp"
-                        android:text="To: "
+                        android:text="@string/to"
                         android:textAlignment="textEnd"
                         android:textColor="@color/onPrimary"
                         android:textSize="18sp"
@@ -101,7 +101,7 @@
                 android:clickable="true"
                 android:focusable="false"
                 android:focusableInTouchMode="false"
-                android:hint="Date">
+                android:hint="@string/date">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:layout_width="match_parent"
@@ -167,4 +167,16 @@
             </com.google.android.material.textfield.TextInputLayout>
         </LinearLayout>
     </io.github.rokarpov.backdrop.BackdropFrontLayer>
+
+    <ImageButton
+        android:id="@+id/imageButton"
+        android:layout_width="56dp"
+        android:layout_height="56dp"
+        android:layout_gravity="top|end"
+        android:layout_margin="8dp"
+        android:background="@null"
+        android:onClick="onRefresh"
+        android:tint="#0000"
+        app:srcCompat="@drawable/ic_refresh" />
+
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
