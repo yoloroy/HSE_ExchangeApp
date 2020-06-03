@@ -2,6 +2,7 @@ package com.yoloyoj.hse_exchangeapp
 
 import android.annotation.SuppressLint
 import android.app.DatePickerDialog
+import android.content.Context
 import android.os.Build
 import android.os.Bundle
 import android.text.Editable
@@ -12,6 +13,7 @@ import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
 import com.yoloyoj.hse_exchangeapp.web.getApiClient
@@ -23,8 +25,13 @@ import retrofit2.Response
 import java.util.*
 
 
+const val SAVED_VALUES = "saved_values"
+
+
 class MainActivity : AppCompatActivity() {
     private lateinit var backdropController: BackdropController
+
+    private lateinit var savedValues: MutableMap<String, Double>
 
     // current currencies
     private lateinit var topCurrency: String
@@ -33,6 +40,7 @@ class MainActivity : AppCompatActivity() {
     // to avoid recursion
     var isCalculating = true
 
+    // top / bot -> conv
     // top_value / convertValue -> bot_value
     // bot_value * convertValue -> top_value
     var convertValue: Double = 1.0
@@ -48,6 +56,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onStart() {
+        loadValues()
+
         loadListeners()
         loadChoosers()
         // loadDefaults calls after get response in loadChoosers
@@ -150,55 +160,59 @@ class MainActivity : AppCompatActivity() {
         getApiClient()
             .getAvailableNames()?.enqueue(object : Callback<Map<Any, Any>?> {
                 override fun onFailure(call: Call<Map<Any, Any>?>, t: Throwable) {
-                    // TODO: Add snackBar
+                    //  for this case we have saved information
                 }
 
                 override fun onResponse(call: Call<Map<Any, Any>?>, response: Response<Map<Any, Any>?>) {
                     @Suppress("UNCHECKED_CAST")  // all checked))
-                    (response.body()?.get("rates") as Map<String, *>).keys.plus("EUR").toList().sorted().also { names ->
-                        this@MainActivity.names = names
-                        with(
-                            object : ArrayAdapter<String>(this@MainActivity, android.R.layout.simple_list_item_1, names) {
-                                override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
-                                    return super.getView(position, convertView, parent)
-                                        .convertView(position).apply {
-                                            @Suppress("DEPRECATION")
-                                            setTextColor(resources.getColor(R.color.onPrimary))
-                                        }
-                                }
+                    (response.body()?.get("rates") as Map<String, Double>)
+                        .also { saveValues(it) }
+                        .keys.plus("EUR").toList().sorted().also { names ->
+                            this@MainActivity.names = names
+                            with(
+                                object : ArrayAdapter<String>(this@MainActivity, android.R.layout.simple_list_item_1, names) {
+                                    override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
+                                        return super.getView(position, convertView, parent)
+                                            .convertView(position).apply {
+                                                @Suppress("DEPRECATION")
+                                                setTextColor(resources.getColor(R.color.onPrimary))
+                                            }
+                                    }
 
-                                override fun getDropDownView(position: Int, convertView: View?, parent: ViewGroup): View {
-                                    return super.getDropDownView(position, convertView, parent)
-                                        .convertView(position)
-                                }
+                                    override fun getDropDownView(position: Int, convertView: View?, parent: ViewGroup): View {
+                                        return super.getDropDownView(position, convertView, parent)
+                                            .convertView(position)
+                                    }
 
-                                private fun View.convertView(position: Int) = (this as TextView).apply {
-                                    text = Currency.getInstance(getItem(position)).getName()
+                                    private fun View.convertView(position: Int) = (this as TextView).apply {
+                                        text = Currency.getInstance(getItem(position)).getName()
+                                    }
+                                }
+                            ) {
+                                top_currency_choose.adapter = this
+                                bot_currency_choose.adapter = this
+                            }
+
+                            top_currency_choose.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+                                override fun onNothingSelected(parent: AdapterView<*>?) {}
+
+                                override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+                                    topCurrency = parent!!.adapter.getItem(position).toString()
+                                    top_value.hint = Currency.getInstance(topCurrency).getName()
+                                    updateConvertValue()
                                 }
                             }
-                        ) {
-                            top_currency_choose.adapter = this
-                            bot_currency_choose.adapter = this
-                        }
-                        top_currency_choose.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-                            override fun onNothingSelected(parent: AdapterView<*>?) {}
+                            bot_currency_choose.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+                                override fun onNothingSelected(parent: AdapterView<*>?) {}
 
-                            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
-                                topCurrency = parent!!.adapter.getItem(position).toString()
-                                top_value.hint = Currency.getInstance(topCurrency).getName()
-                                updateConvertValue()
+                                override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+                                    botCurrency = parent!!.adapter.getItem(position).toString()
+                                    bot_value.hint = Currency.getInstance(botCurrency).getName()
+                                    updateConvertValue()
+                                }
                             }
-                        }
-                        bot_currency_choose.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-                            override fun onNothingSelected(parent: AdapterView<*>?) {}
 
-                            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
-                                botCurrency = parent!!.adapter.getItem(position).toString()
-                                bot_value.hint = Currency.getInstance(botCurrency).getName()
-                                updateConvertValue()
-                            }
-                        }
-                        loadDefaults()
+                            loadDefaults()
                     }
                 }
             })
@@ -217,7 +231,25 @@ class MainActivity : AppCompatActivity() {
         getApiClient()
             .getExchangeValues(date_picker.editText?.text.toString(), botCurrency, topCurrency)?.enqueue(object : Callback<Map<Any, Any>?> {
                 override fun onFailure(call: Call<Map<Any, Any>?>, t: Throwable) {
-                    // TODO: Add snackBar
+                    convertValue = savedValues.run {
+                        if (containsKey(topCurrency) and containsKey(botCurrency)) {
+                            Snackbar.make(
+                                convert_value,
+                                "Problem when connecting. Showing the last saved data",
+                                Snackbar.LENGTH_LONG
+                            ).show()
+
+                            get(topCurrency)!! / get(botCurrency)!!
+                        } else {
+                            Snackbar.make(
+                                convert_value,
+                                "An error occurred while trying to upload data for currency conversion",
+                                Snackbar.LENGTH_LONG
+                            ).show()
+
+                            1.0
+                        }
+                    }
                 }
 
                 override fun onResponse(call: Call<Map<Any, Any>?>, response: Response<Map<Any, Any>?>) {
@@ -226,17 +258,43 @@ class MainActivity : AppCompatActivity() {
                     } catch (e: TypeCastException) {
                         // it's probably first chooser's call
                     }
-                    top_value.editText!!.text = top_value.editText!!.text
-
-                    // why I don't defined normal func? - I dunno
-                    // view current currency rate
-                    convert_value.text =
-                        listOf(botCurrency, topCurrency)  // create list
-                            .map { checkSymbol(Currency.getInstance(it).symbol) }  // get symbols
-                            .run { if (convertValue < 1) reversed() + (1/convertValue) else this + convertValue }  // sort by cheap
-                            .run { "1 ${this[0]} = ${"%.2f".format(this[2])} ${this[1]}" }  // view currency rate
+                    recalcConvertValue()
                 }
             })
+    }
+
+    private fun recalcConvertValue() {
+        top_value.editText!!.text = top_value.editText!!.text
+
+        // why I don't defined normal func? - I dunno
+        // view current currency rate
+        convert_value.text =
+            listOf(botCurrency, topCurrency)  // create list
+                .map { checkSymbol(Currency.getInstance(it).symbol) }  // get symbols
+                .run { if (convertValue < 1) reversed() + (1/convertValue) else this + convertValue }  // sort by cheap
+                .run { "1 ${this[0]} = ${"%.2f".format(this[2])} ${this[1]}" }  // view currency rate
+    }
+
+    private fun saveValues(values: Map<String, Double>) {
+        with(getSharedPreferences(SAVED_VALUES, Context.MODE_PRIVATE).edit()) {
+            this.putStringSet("names", values.keys)
+
+            for ((k, v) in values.entries) {
+                this.putFloat(k, v.toFloat())
+            }
+
+            this.apply()
+        }
+    }
+
+    private fun loadValues() {
+        with(getSharedPreferences(SAVED_VALUES, Context.MODE_PRIVATE)) {
+            names = this.getStringSet("names", setOf())!!.toList()
+
+            for (i in names) {
+                savedValues[i] = this.getFloat(i, 1.0f).toDouble()
+            }
+        }
     }
 }
 
