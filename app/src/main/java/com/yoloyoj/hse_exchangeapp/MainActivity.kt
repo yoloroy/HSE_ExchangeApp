@@ -19,6 +19,7 @@ import kotlinx.android.synthetic.main.activity_main.top_value
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
+import java.lang.Exception
 import java.util.*
 
 
@@ -134,7 +135,10 @@ class MainActivity : AppCompatActivity() {
                             object : ArrayAdapter<String>(this@MainActivity, android.R.layout.simple_list_item_1, names) {
                                 override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
                                     return super.getView(position, convertView, parent)
-                                        .convertView(position).apply { setTextColor(resources.getColor(R.color.onPrimary, null)) }
+                                        .convertView(position).apply {
+                                            @Suppress("DEPRECATION")
+                                            setTextColor(resources.getColor(R.color.onPrimary))
+                                        }
                                 }
 
                                 override fun getDropDownView(position: Int, convertView: View?, parent: ViewGroup): View {
@@ -212,6 +216,10 @@ private fun Any.toEditable(): Editable? = Editable.Factory.getInstance().newEdit
 // for easy reading values
 private fun Editable.toDouble(): Double {
     this.toString().run {
-        return if (this.isBlank()) 0.0 else this.toDouble()
+        try {
+            return this.toDouble()
+        } catch (e: Exception) {
+            return 0.0
+        }
     }
 }
