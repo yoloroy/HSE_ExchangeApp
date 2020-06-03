@@ -1,6 +1,8 @@
 package com.yoloyoj.hse_exchangeapp
 
 import android.annotation.SuppressLint
+import android.app.DatePickerDialog
+import android.os.Build
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
@@ -10,18 +12,15 @@ import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
 import com.yoloyoj.hse_exchangeapp.web.getApiClient
 import io.github.rokarpov.backdrop.BackdropController
 import kotlinx.android.synthetic.main.activity_main.*
-import kotlinx.android.synthetic.main.activity_main.bot_value
-import kotlinx.android.synthetic.main.activity_main.top_value
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
-import java.lang.Exception
 import java.util.*
-import kotlin.math.max
 
 
 class MainActivity : AppCompatActivity() {
@@ -54,7 +53,33 @@ class MainActivity : AppCompatActivity() {
         // loadDefaults calls after get response in loadChoosers
         // loadConvertValue calls in loadDefaults
 
+        loadDatePicker()
+
         super.onStart()
+    }
+
+    @SuppressLint("SetTextI18n")
+    private fun loadDatePicker() {
+        date_picker.editText?.text = "latest".toEditable()
+
+        // TODO (https://github.com/Ibotta/Supported-Picker-Dialogs): Add support
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N) {
+            date_picker.visibility = View.GONE
+            return
+        }
+
+        date_picker.editText!!.setOnClickListener {
+            DatePickerDialog(this).apply {
+                setOnDateSetListener { _, year, month, day ->
+                    (it as TextInputEditText).text = "$year-$month-$day".toEditable()
+                    updateConvertValue()
+                }
+            }.show()
+        }
+
+        date_picker.editText!!.setOnFocusChangeListener { view, b ->
+            if (b) view.callOnClick()
+        }
     }
 
     override fun onBackPressed() {
@@ -190,7 +215,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun updateConvertValue() {
         getApiClient()
-            .getExchangeValues(botCurrency, topCurrency)?.enqueue(object : Callback<Map<Any, Any>?> {
+            .getExchangeValues(date_picker.editText?.text.toString(), botCurrency, topCurrency)?.enqueue(object : Callback<Map<Any, Any>?> {
                 override fun onFailure(call: Call<Map<Any, Any>?>, t: Throwable) {
                     // TODO: Add snackBar
                 }

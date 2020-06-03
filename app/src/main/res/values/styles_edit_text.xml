@@ -1,8 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <dimen name="boxCornerRadius">8dp</dimen>
+    <dimen name="boxCornerRadiusSmall">2dp</dimen>
+
     <style
-        name="MainTextInputLayout"
+        name="FrontTextInputLayout"
         parent="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">0dp</item>
@@ -16,6 +18,25 @@
         <item name="boxCornerRadiusTopEnd">@dimen/boxCornerRadius</item>
         <item name="boxCornerRadiusTopStart">@dimen/boxCornerRadius</item>
         <item name="boxCornerRadiusBottomStart">@dimen/boxCornerRadius</item>
+
+        <item name="endIconMode">clear_text</item>
+    </style>
+
+    <style
+        name="BackTextInputLayout"
+        parent="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">0dp</item>
+
+        <item name="android:layout_weight">1</item>
+        <item name="android:layout_margin">8dp</item>
+
+        <item name="boxBackgroundColor">@android:color/white</item>
+        <item name="boxBackgroundMode">filled</item>
+        <item name="boxCornerRadiusBottomEnd">@dimen/boxCornerRadiusSmall</item>
+        <item name="boxCornerRadiusTopEnd">@dimen/boxCornerRadius</item>
+        <item name="boxCornerRadiusTopStart">@dimen/boxCornerRadius</item>
+        <item name="boxCornerRadiusBottomStart">@dimen/boxCornerRadiusSmall</item>
 
         <item name="endIconMode">clear_text</item>
     </style>
