@@ -21,6 +21,7 @@ import retrofit2.Callback
 import retrofit2.Response
 import java.lang.Exception
 import java.util.*
+import kotlin.math.max
 
 
 class MainActivity : AppCompatActivity() {
@@ -181,7 +182,10 @@ class MainActivity : AppCompatActivity() {
     @SuppressLint("SetTextI18n")  // this is only a number
     private fun recalculate(me: View) {
         (me as TextInputLayout).editText!!.text =
-            "%.2f".format(if (me == top_value) bot_value.editText!!.text.toDouble() * convertValue else top_value.editText!!.text.toDouble() / convertValue).toEditable()
+            "%.2f".format(
+                if (me == top_value) bot_value.editText!!.text.toDouble() * convertValue
+                else top_value.editText!!.text.toDouble() / convertValue
+            ).toEditable()
     }
 
     private fun updateConvertValue() {
@@ -198,28 +202,40 @@ class MainActivity : AppCompatActivity() {
                         // it's probably first chooser's call
                     }
                     top_value.editText!!.text = top_value.editText!!.text
+
+                    // why I don't defined normal func? - I dunno
+                    // view current currency rate
+                    convert_value.text =
+                        listOf(botCurrency, topCurrency)  // create list
+                            .map { checkSymbol(Currency.getInstance(it).symbol) }  // get symbols
+                            .run { if (convertValue < 1) reversed() + (1/convertValue) else this + convertValue }  // sort by cheap
+                            .run { "1 ${this[0]} = ${"%.2f".format(this[2])} ${this[1]}" }  // view currency rate
                 }
             })
     }
 }
 
+// return unicode symbols if we can
+private fun checkSymbol(s: String) = when (s) {
+    Currency.getInstance("RUB").symbol -> "₽"
+    else -> s
+}.run {
+        if ((this.length == 1) and this.toCharArray()[0].isDefined()) this
+        else s
+    }
+
 // for displaying undisplayable symbols
-private fun Currency.getName(): String {
-    if (this.symbol == "RUB")
-        return this.run { "₽ $displayName" }
-    return this.run { "$symbol $displayName" }
-}
+private fun Currency.getName(): String = "${checkSymbol(symbol)} $displayName"
 
 // for easy displaying values
 private fun Any.toEditable(): Editable? = Editable.Factory.getInstance().newEditable(toString())
 
 // for easy reading values
-private fun Editable.toDouble(): Double {
-    this.toString().run {
-        try {
-            return this.toDouble()
-        } catch (e: Exception) {
-            return 0.0
-        }
+private fun Editable.toDouble(): Double = toString().run {
+    try {
+        this.toDouble()
+    } catch (e: Exception) {
+        0.0
     }
 }
+

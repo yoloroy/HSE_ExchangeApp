@@ -106,6 +106,16 @@
             android:paddingBottom="4dp"
             app:layout_childType="header">
 
+            <TextView
+                android:id="@+id/convert_value"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="4dp"
+                android:text=" 1 $ = 68 ₽"
+                android:textAllCaps="false"
+                android:textColor="#000"
+                android:textSize="18sp" />
+
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/top_value"
                 style="@style/MainTextInputLayout"
