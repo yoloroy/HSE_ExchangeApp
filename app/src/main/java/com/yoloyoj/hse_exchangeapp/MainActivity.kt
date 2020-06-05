@@ -26,7 +26,6 @@ import retrofit2.Callback
 import retrofit2.Response
 import java.util.*
 import kotlin.concurrent.thread
-import kotlin.concurrent.timerTask
 
 
 const val SAVED_VALUES = "saved_values"

@@ -9,9 +9,9 @@
     </style>
 
     <style name="SplashTheme" parent="Theme.MaterialComponents.Light.DarkActionBar">
-        <item name="colorPrimary">@color/colorPrimary</item>
-        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
-        <item name="colorAccent">@color/colorAccent</item>
+        <item name="colorPrimary">@android:color/white</item>
+        <item name="colorPrimaryDark">#2000</item>
+        <item name="colorAccent">@android:color/white</item>
 
         <item name="android:windowBackground">@drawable/splash_screen</item>
     </style>
