@@ -1,4 +1,4 @@
-# HSE_ExchangeApp
+# HSE_ExchangeApp ![](https://github.com/yoloroy/HSE_ExchangeApp/blob/9abc5114db681ce36a05ce24907ce1bb821a700f/app/src/main/res/mipmap-mdpi/ic_launcher_round.png)
 🎉 На данный момент выполнено <b>4</b> из <b>4</b>х этапов
 [📄 Ссылка на само задание ⬀](https://cs.hse.ru/mobile/2020/android)
 
