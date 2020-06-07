@@ -7,7 +7,7 @@
   1. Нужно скачать [apk-файл](https://github.com/yoloroy/HSE_ExchangeApp/raw/master/app/build/outputs/apk/debug/app-debug.apk) на свой android
   1. Затем запустите скаченный apk-файл и вуаля - приложение установлено
   <br>
-- Если вы хотите усановить проект:
+- Если вы хотите установить проект:
   1. Вам понадобится Android Studio, который вы можете скачать по [ссылке](https://developer.android.com/studio?hl=ru)
   1. После установки нужно склонировать проект в удобное для Вас место командой `git clone https://github.com/yoloroy/HSE_ExchangeApp.git`
   1. Далее нужно поставить AVD с версией SDK выше или равной 19 и запустить само приложение `Shift + F10`
